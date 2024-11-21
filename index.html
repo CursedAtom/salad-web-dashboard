@@ -12,6 +12,11 @@
             width: 45%; 
             margin: 20px; 
         } 
+        .half-width-chart { 
+            display: inline-block; 
+            width: 45%; 
+            margin: 20px; 
+        } 
         .full-width-chart { 
             display: inline-block; 
             width: 90%; 
@@ -41,7 +46,7 @@
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
         } 
-        </style>
+    </style>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
@@ -49,10 +54,10 @@
     <div class="chart" id="plot1"></div>
     <div class="chart" id="plot2"></div>
     <div class="chart" id="plot3"></div>
-    <div class="full-width-chart" id="plot4"></div>
+    <div class="half-width-chart" id="plot4"></div>
+    <div class="full-width-chart" id="plot5"></div>
     <div id="errormessage"><h1>Error fetching data. Please message @cursedatom on Discord.</h1></div>
     <footer id="no-bandwidth-msg"></footer>
-    <div id="errormessage"><h1>Error fetching data. Please message @cursedatom on Discord.</h1></div>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const spinner = document.getElementById('spinner');
@@ -104,10 +109,10 @@
                 if (bandwidthData.length > 0) {
                     let xValuesBandwidth = bandwidthData.map((_, i) => i + 1);
                     let bidirThroughput = bandwidthData.map(data => data.BidirThroughput);
-                    let tooltipDataBandwidth = bandwidthData.map(data => `Timestamp: ${data.timestamp}<br>Throughput: ${data.BidirThroughput} MB/s`);
-                    createPlot('plot3', 'Bandwidth Sharing', xValuesBandwidth, bidirThroughput, tooltipDataBandwidth, 'scatter');
-                } else {
-                    // If no bandwidth data, adjust the layout for the balance delta and display the message
+                    let tooltipDataBandwidth = bandwidthData.map(data => `Timestamp: ${data.timestamp}<br>Throughput: ${data.BidirThroughput.toFixed(4)} MB/s`);
+                    createPlot('plot3', 'Bandwidth Sharing (in MB/s)', xValuesBandwidth, bidirThroughput, tooltipDataBandwidth, 'scatter');
+
+                    // Balance Changes Plot
                     let earningsHistory = walletData.map((data, index) => {
                         if (index === 0) return 0;
                         return walletData[index].currentBalance - walletData[index - 1].currentBalance;
@@ -117,6 +122,20 @@
                         return `Delta: ${delta}<br>Timestamp: ${data.timestamp}<br>Balance: ${data.currentBalance}`;
                     });
                     createPlot('plot4', 'Balance Changes', xValuesWallet, earningsHistory, tooltipDataEarnings, 'scatter');
+                } else {
+                    // If no bandwidth data, adjust the layout for the balance delta to use full width
+                    let earningsHistory = walletData.map((data, index) => {
+                        if (index === 0) return 0;
+                        return walletData[index].currentBalance - walletData[index - 1].currentBalance;
+                    });
+                    let tooltipDataEarnings = walletData.map((data, index) => {
+                        let delta = index === 0 ? 0 : (walletData[index].currentBalance - walletData[index - 1].currentBalance).toFixed(2);
+                        return `Delta: ${delta}<br>Timestamp: ${data.timestamp}<br>Balance: ${data.currentBalance}`;
+                    });
+                    createPlot('plot5', 'Balance Changes', xValuesWallet, earningsHistory, tooltipDataEarnings, 'scatter');
+                }
+
+                if (bandwidthData.length === 0) {
                     document.getElementById('no-bandwidth-msg').style.textAlign = "left";
                     document.getElementById('no-bandwidth-msg').innerHTML = "<h3>No bandwidth sharing :(</h3>";
                 }
@@ -125,7 +144,6 @@
                 console.error('Error fetching data:', error);
                 spinner.style.display = 'none'; // Hide spinner if error
                 errorMessage.style.display = 'block';
-                
             }
         });
     </script>
