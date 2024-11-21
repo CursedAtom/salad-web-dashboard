@@ -5,6 +5,16 @@ import re
 import json
 from datetime import datetime
 import time
+import argparse
+
+parser = argparse.ArgumentParser(description='Set webserver port')
+parser.add_argument('port', type=int, nargs='?', default=8000, help='the integer port for the webserver (default: 8000)')
+args = parser.parse_args()
+port = args.port
+print(f'Starting webserver on port {port}')
+
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -86,7 +96,7 @@ def read_log_files(log_dir):
 
         new_data, lines_read = parse_file(file_path, earnings_report_regex, wallet_balance_regex, bandwidth_regex, start_line)
         if new_data:
-            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "New Data Found:", new_data)
+            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "New Data Found!")
             new_data_found = True
             
         salad_data.extend(new_data)
@@ -117,8 +127,8 @@ def get_salad_data():
 
 @app.route('/')
 def serve_index():
-    print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "site has been accessed.")
+    print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "Site has been accessed.")
     return send_from_directory('', 'index.html')
 
 if __name__ == '__main__':
-    app.run(debug=False, port=8000)
+    app.run(debug=False, port=port)
