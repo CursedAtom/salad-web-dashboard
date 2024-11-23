@@ -84,7 +84,7 @@ def parse_file(file_path, start_line=0):
             for match in BANDWIDTH_REGEX.finditer(''.join(content)):
                 salad_data.append({
                     'timestamp': match.group(1),
-                    'BidirThroughput': float(match.group(2)) / (250000 * 30)  # Convert from bits/30s to MB/s
+                    'BidirThroughput': float(match.group(2)) / (250000)  # Convert from bits/30s to MB/s
                 })
 
     return salad_data, len(content)
