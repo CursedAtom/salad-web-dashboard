@@ -93,9 +93,15 @@ def parse_file(file_path, start_line=0):
 def search_logs(log_dir):
     start_time = time.perf_counter()
     salad_data = []
+    
 
     log_cache = load_cache(LOG_CACHE_FILE)
     bandwidth_cache = load_cache(BANDWIDTH_CACHE_FILE)
+
+    for file_path in log_cache['order']:
+            salad_data.extend(log_cache['files'][file_path]['data'])
+    for file_path in bandwidth_cache['order']:
+        salad_data.extend(bandwidth_cache['files'][file_path]['data'])
 
     # Collect log files
     log_files = []
@@ -155,10 +161,6 @@ def search_logs(log_dir):
 
     if not new_data_found:
         print(f"{datetime.now()}: No new data found. Returning cached data.")
-        for file_path in log_cache['order']:
-            salad_data.extend(log_cache['files'][file_path]['data'])
-        for file_path in bandwidth_cache['order']:
-            salad_data.extend(bandwidth_cache['files'][file_path]['data'])
 
     save_cache(log_cache, LOG_CACHE_FILE)
     save_cache(bandwidth_cache, BANDWIDTH_CACHE_FILE)
