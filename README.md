@@ -4,14 +4,14 @@ Chef Dashboard for Salad with Web Interface
 
 ### Before running, ensure you install the requirements:
 ```cmd
-pip install flask flask-cors
+pip install flask flask-cors bleach
 ```
 
 ## To run the webserver, you can run it either without arguments or include the server port. Default port is 8000.
 
-`python.exe server.py`<br>
+```python.exe server.py```<br>
 or...<br>
-`python.exe server.py 1000` to run on port 1000
+```python.exe server.py 1000``` to run on port 1000
 
 ### Known possible issues:
 - Bandwidth sharing may behave weirdly if you have multiple gateways in your log folder (idk, too lazy to fix)
