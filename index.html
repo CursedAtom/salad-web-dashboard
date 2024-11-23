@@ -41,7 +41,39 @@
             padding-top: 100px;
             text-align: center;
             display: none;
-        } 
+        }
+        #degraded-error {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #ff9933;
+            color: #0a2133;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+            z-index: 100;
+            width: 300px;
+        }
+        #degraded-error h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        #degraded-error p {
+            margin: 5px 0;
+        }
+        #degraded-error button {
+            background-color: #0a2133;
+            color: white;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #degraded-error button:hover {
+            background-color: #ff9933;
+        }
         @keyframes spin { 
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
@@ -58,10 +90,22 @@
     <div class="full-width-chart" id="plot5"></div>
     <div id="errormessage"><h1>Error fetching data. Please message @cursedatom on Discord.</h1></div>
     <footer id="no-bandwidth-msg"></footer>
+
+    <!-- Degraded Error Message -->
+    <div id="degraded-error">
+        <h3>Degraded Error</h3>
+        <p id="degraded-error-message"></p>
+        <button id="dismiss-error">Dismiss</button>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const spinner = document.getElementById('spinner');
-            const errorMessage = document.getElementById('errormessage'); 
+            const errorMessage = document.getElementById('errormessage');
+            const degradedError = document.getElementById('degraded-error');
+            const dismissButton = document.getElementById('dismiss-error');
+            const errorMessageElement = document.getElementById('degraded-error-message');
+            
             spinner.style.display = 'block'; // Show spinner
             try {
                 const response = await fetch('/api/salad-data');
@@ -140,6 +184,35 @@
                     document.getElementById('no-bandwidth-msg').innerHTML = "<h3>No bandwidth sharing :(</h3>";
                 }
 
+                // Fetch Degraded Errors
+                const errorResponse = await fetch('/api/error-status');
+                const errors = await errorResponse.json();
+                if (errors.length > 0) {
+                    const error = errors[0]; // Take the first error
+                    errorMessageElement.innerHTML = `Machine: ${error.machine_name}<br>Error: ${error.error_message}<br>Timestamp: ${error.timestamp}`;
+                    degradedError.style.display = 'block'; // Show the degraded error
+                }
+
+                dismissButton.addEventListener('click', async () => {
+                    // Send POST request to dismiss error
+                    const errorTimestamp = errors[0].timestamp
+                    try {
+                        const dismissResponse = await fetch('/api/dismiss-error', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ timestamp: errorTimestamp })
+                        });
+
+                        if (dismissResponse.ok) {
+                            degradedError.style.display = 'none'; // Hide the error message when dismiss button is clicked
+                        }
+                    } catch (error) {
+                        console.error('Error dismissing error:', error);
+                    }
+                });
+
             } catch (error) {
                 console.error('Error fetching data:', error);
                 spinner.style.display = 'none'; // Hide spinner if error
@@ -147,6 +220,5 @@
             }
         });
     </script>
-
 </body>
 </html>
