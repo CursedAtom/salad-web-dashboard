@@ -18,7 +18,6 @@ or...<br>
 ```cmd
 python.exe server.py -port 1000 -machine_name "Name of Machine"
 ```
- to run on port 1000
 
 ### Known possible issues:
 - Bandwidth sharing may behave weirdly if you have multiple gateways in your log folder (idk, too lazy to fix)
