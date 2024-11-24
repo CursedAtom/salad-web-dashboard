@@ -44,16 +44,16 @@ def save_cache(cache_data, file_path):
 
 # Regex patterns for log parsing
 EARNINGS_REPORT_REGEX = re.compile(
-    r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} -\d{2}:\d{2}) \[INF\] Predicted Earnings Report: ([\d.]+) from \(([^)]+)\)"
+    r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} [+-]\d{2}:\d{2}) \[INF\] Predicted Earnings Report: ([\d.]+) from \(([^)]+)\)"
 )
 WALLET_BALANCE_REGEX = re.compile(
-    r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} -\d{2}:\d{2}) \[INF\] Wallet: Current\(([\d.]+)\), Predicted\(([\d.]+)\)"
+    r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} [+-]\d{2}:\d{2}) \[INF\] Wallet: Current\(([\d.]+)\), Predicted\(([\d.]+)\)"
 )
 BANDWIDTH_REGEX = re.compile(
-    r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} -\d{2}:\d{2}) \[INF\] \{.*?"BidirThroughput":([\d.]+)'
+    r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} [+-]\d{2}:\d{2}) \[INF\] \{.*?"BidirThroughput":([\d.]+)'
 )
 ERROR_REGEX = re.compile(
-    r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} -\d{2}:\d{2}) \[WRN\] Node Compatibility Workload Failure (.*?) NodeCompatibilityMessage {(.*?)}',
+    r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} [+-]\d{2}:\d{2}) \[WRN\] Node Compatibility Workload Failure (.*?) NodeCompatibilityMessage {(.*?)}',
     re.DOTALL
 )
 
