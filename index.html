@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Salad Metrics</title>
-    <style> 
+    <style>
         body { 
             background-color: #2F2F2F; 
             color: white; 
@@ -10,16 +10,19 @@
         .chart { 
             display: inline-block; 
             width: 45%; 
+            height: 500px; 
             margin: 20px; 
         } 
         .half-width-chart { 
             display: inline-block; 
             width: 45%; 
+            height: 500px; 
             margin: 20px; 
         } 
         .full-width-chart { 
             display: inline-block; 
             width: 90%; 
+            height: 500px; 
             margin: 20px; 
         } 
         footer { 
@@ -79,15 +82,21 @@
             100% { transform: rotate(360deg); } 
         } 
     </style>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
 </head>
 <body>
     <div class="spinner" id="spinner"></div>
-    <div class="chart" id="plot1"></div>
-    <div class="chart" id="plot2"></div>
-    <div class="chart" id="plot3"></div>
-    <div class="half-width-chart" id="plot4"></div>
-    <div class="full-width-chart" id="plot5"></div>
+    <div class="chart">
+        <canvas id="chart1"></canvas>
+    </div>
+    <div class="chart">
+        <canvas id="chart2"></canvas>
+    </div>
+    <div class="full-width-chart">
+        <canvas id="chart3"></canvas>
+    </div>
     <div id="errormessage"><h1>Error fetching data. Please message @cursedatom on Discord.</h1></div>
     <footer id="no-bandwidth-msg"></footer>
 
@@ -112,75 +121,106 @@
                 const saladData = await response.json();
                 spinner.style.display = 'none'; // Hide spinner after data is loaded
 
-                console.log('Fetched Data:', saladData);
+                console.log('Fetched Data:', saladData.length, 'Items');
 
-                function createPlot(id, title, xData, yData, tooltipData, type='bar') {
-                    var data = [{
-                        x: xData,
-                        y: yData.map(Number),
+                function parseDate(dateString) { 
+                    return moment(dateString, 'YYYY-MM-DD HH:mm:ss.SSS Z').toDate(); 
+                }
+                function createChart(ctx, type, labels, data, label, tooltips) {
+                    new Chart(ctx, {
                         type: type,
-                        marker: { color: '#4287f5' },
-                        text: tooltipData,
-                        hoverinfo: 'text'
-                    }];
-
-                    var layout = {
-                        paper_bgcolor: '#2F2F2F',
-                        plot_bgcolor: '#2F2F2F',
-                        font: { color: 'white' },
-                        title: title
-                    };
-
-                    Plotly.newPlot(id, data, layout);
+                        data: {
+                            labels: labels.map(parseDate),
+                            datasets: [{
+                                pointRadius: 1,
+                                label: label,
+                                data: data,
+                                backgroundColor: 'rgba(66, 135, 245, 0.6)',
+                                borderColor: 'rgba(66, 135, 245, 1)',
+                                borderWidth: 2,
+                                fill: true,
+                            }]
+                        },
+                        options: { 
+                            scales: { 
+                                y: {  
+                                    ticks: { 
+                                        color: 'white' 
+                                    } 
+                                }, 
+                                x: { 
+                                    ticks: { 
+                                        color: 'white' 
+                                    }, 
+                                    type: 'time', 
+                                    time: { 
+                                        unit: 'hour', 
+                                        stepSize: 3, 
+                                        tooltipFormat: 'YYYY-MM-DD HH:mm:ss', 
+                                        displayFormats: { 
+                                            hour: 'MMM DD, HH:mm' 
+                                        } 
+                                    } 
+                                } 
+                            }, 
+                            plugins: { 
+                                tooltip: { 
+                                    callbacks: { 
+                                        label: function(tooltipItem) { 
+                                            const tooltipText = tooltips[tooltipItem.dataIndex];
+                                            return tooltipText.split('\n'); // Display each line separately
+                                        } 
+                                    } 
+                                }, 
+                                legend: { 
+                                    labels: {
+                                        color: 'white' 
+                                    } 
+                                }, 
+                                title: { 
+                                    display: true, 
+                                    text: label, 
+                                    color: 'white' 
+                                } 
+                            }, 
+                            layout: { 
+                                padding: 10 
+                            }, 
+                            responsive: true, 
+                            maintainAspectRatio: false 
+                        }
+                    });
                 }
 
-                // Wallet Balance Plot
+
+                // Wallet Balance Chart
                 let walletData = saladData.filter(data => data.currentBalance !== undefined);
-                let xValuesWallet = walletData.map((_, i) => i + 1);
+                let xValuesWallet = walletData.map(data => data.timestamp);
                 let currentBalances = walletData.map(data => data.currentBalance);
-                let tooltipDataWallet = walletData.map(data => `Timestamp: ${data.timestamp}<br>Current Balance: ${data.currentBalance}<br>Predicted Balance: ${data.predictedBalance}`);
-                createPlot('plot1', 'Wallet Balance', xValuesWallet, currentBalances, tooltipDataWallet);
+                let tooltipsWallet = walletData.map(data => `Timestamp: ${data.timestamp}\nCurrent Balance: ${data.currentBalance}\nPredicted Balance: ${data.predictedBalance}`);
+                createChart(document.getElementById('chart1').getContext('2d'), 'line', xValuesWallet, currentBalances, 'Wallet Balance', tooltipsWallet);
 
-                // Container Stats Plot
-                let containerStatsData = saladData.filter(data => data.earnings !== undefined);
-                let xValuesContainer = containerStatsData.map((_, i) => i + 1);
-                let containerStats = containerStatsData.map(data => data.earnings);
-                let tooltipDataContainer = containerStatsData.map(data => `Timestamp: ${data.timestamp}<br>Container ID: ${data.containerId}<br>Earnings: ${data.earnings}`);
-                createPlot('plot2', 'Containers', xValuesContainer, containerStats, tooltipDataContainer);
+                // Container Data Chart
+                let containerData = saladData.filter(data => data.earnings !== undefined);
+                let xValuesContainer = containerData.map(data => data.timestamp);
+                let containerStats = containerData.map(data => data.earnings);
+                let tooltipsContainer = containerData.map(data => {
+                    return `Timestamp: ${data.timestamp}\nContainer ID: ${data.containerId}\nEarnings: ${data.earnings}`;
+                });
+                createChart(document.getElementById('chart2').getContext('2d'), 'bubble', xValuesContainer, containerStats, 'Containers', tooltipsContainer);
 
-                // Bandwidth Sharing Plot
+
+                // Bandwidth Sharing Chart
                 let bandwidthData = saladData.filter(data => data.BidirThroughput !== undefined);
                 if (bandwidthData.length > 0) {
-                    let xValuesBandwidth = bandwidthData.map((_, i) => i + 1);
+                    let xValuesBandwidth = bandwidthData.map(data => data.timestamp);
                     let bidirThroughput = bandwidthData.map(data => data.BidirThroughput);
-                    let tooltipDataBandwidth = bandwidthData.map(data => `Timestamp: ${data.timestamp}<br>Throughput: ${data.BidirThroughput.toFixed(4)} MB/s`);
-                    createPlot('plot3', 'Bandwidth Sharing (in MB/s)', xValuesBandwidth, bidirThroughput, tooltipDataBandwidth, 'scatter');
-
-                    // Balance Changes Plot
-                    let earningsHistory = walletData.map((data, index) => {
-                        if (index === 0) return 0;
-                        return walletData[index].currentBalance - walletData[index - 1].currentBalance;
-                    });
-                    let tooltipDataEarnings = walletData.map((data, index) => {
-                        let delta = index === 0 ? 0 : (walletData[index].currentBalance - walletData[index - 1].currentBalance).toFixed(2);
-                        return `Delta: ${delta}<br>Timestamp: ${data.timestamp}<br>Balance: ${data.currentBalance}`;
-                    });
-                    createPlot('plot4', 'Balance Changes', xValuesWallet, earningsHistory, tooltipDataEarnings, 'scatter');
-                } else {
-                    // If no bandwidth data, adjust the layout for the balance delta to use full width
-                    let earningsHistory = walletData.map((data, index) => {
-                        if (index === 0) return 0;
-                        return walletData[index].currentBalance - walletData[index - 1].currentBalance;
-                    });
-                    let tooltipDataEarnings = walletData.map((data, index) => {
-                        let delta = index === 0 ? 0 : (walletData[index].currentBalance - walletData[index - 1].currentBalance).toFixed(2);
-                        return `Delta: ${delta}<br>Timestamp: ${data.timestamp}<br>Balance: ${data.currentBalance}`;
-                    });
-                    createPlot('plot5', 'Balance Changes', xValuesWallet, earningsHistory, tooltipDataEarnings, 'scatter');
+                    let tooltipsBandwidth = bandwidthData.map(data => `Timestamp: ${data.timestamp}\nThroughput: ${data.BidirThroughput.toFixed(4)} MB/s`);
+                    createChart(document.getElementById('chart3').getContext('2d'), 'line', xValuesBandwidth, bidirThroughput, 'Bandwidth Sharing (in MB/s)', tooltipsBandwidth);
                 }
 
                 if (bandwidthData.length === 0) {
-                    document.getElementById('no-bandwidth-msg').style.textAlign = "left";
+                    document.getElementById('no-bandwidth-msg').style.textAlign = "center";
                     document.getElementById('no-bandwidth-msg').innerHTML = "<h3>No bandwidth sharing :(</h3>";
                 }
 
@@ -195,7 +235,7 @@
 
                 dismissButton.addEventListener('click', async () => {
                     // Send POST request to dismiss error
-                    const errorTimestamp = errors[0].timestamp
+                    const errorTimestamp = errors[0].timestamp;
                     try {
                         const dismissResponse = await fetch('/api/dismiss-error', {
                             method: 'POST',
