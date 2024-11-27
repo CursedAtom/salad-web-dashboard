@@ -84,22 +84,21 @@ def parse_file(file_path, start_line=0):
             for match in BANDWIDTH_REGEX.finditer(''.join(content)):
                 salad_data.append({
                     'timestamp': match.group(1),
-                    'BidirThroughput': float(match.group(2)) / (250000)  # Convert from bits/30s to MB/s
+                    'BidirThroughput': float(match.group(2)) / (280000*8)  # Convert from bits/30s to MB/s
                 })
 
     return salad_data, len(content)
 
-# Search logs for data
 def search_logs(log_dir):
     start_time = time.perf_counter()
     salad_data = []
-    
 
     log_cache = load_cache(LOG_CACHE_FILE)
     bandwidth_cache = load_cache(BANDWIDTH_CACHE_FILE)
 
+    # Collect data from cache
     for file_path in log_cache['order']:
-            salad_data.extend(log_cache['files'][file_path]['data'])
+        salad_data.extend(log_cache['files'][file_path]['data'])
     for file_path in bandwidth_cache['order']:
         salad_data.extend(bandwidth_cache['files'][file_path]['data'])
 
@@ -108,7 +107,9 @@ def search_logs(log_dir):
     for root, dirnames, filenames in os.walk(log_dir):
         dirnames[:] = [d for d in dirnames if d not in ['ndm', 'systeminformation']]
         log_files.extend(
-            os.path.join(root, file) for file in filenames if file.endswith(('.txt', '.log'))
+            os.path.join(root, file)
+            for file in filenames
+            if file.endswith(('.txt', '.log')) and "Bandwidth-SGS-" not in root
         )
     log_files.sort(key=os.path.getmtime, reverse=True)
     log_files = log_files[:20]
@@ -165,9 +166,12 @@ def search_logs(log_dir):
     save_cache(log_cache, LOG_CACHE_FILE)
     save_cache(bandwidth_cache, BANDWIDTH_CACHE_FILE)
 
+    # Sort the final data list
     salad_data.sort(key=lambda x: datetime.strptime(x['timestamp'], '%Y-%m-%d %H:%M:%S.%f %z'))
     print(f"Log processing completed in {(time.perf_counter() - start_time) * 1000:.2f} ms")
     return salad_data
+
+
 
 # Check logs for errors
 def check_errors(log_dir):
