@@ -126,19 +126,20 @@
                 function parseDate(dateString) { 
                     return moment(dateString, 'YYYY-MM-DD HH:mm:ss.SSS Z').toDate(); 
                 }
-                function createChart(ctx, type, labels, data, label, tooltips) {
+                function createChart(ctx, type, labels, data, label, tooltips, pointRadius = 0) {
                     new Chart(ctx, {
                         type: type,
                         data: {
                             labels: labels.map(parseDate),
                             datasets: [{
-                                pointRadius: 1,
+                                pointRadius: pointRadius,
                                 label: label,
                                 data: data,
                                 backgroundColor: 'rgba(66, 135, 245, 0.6)',
                                 borderColor: 'rgba(66, 135, 245, 1)',
                                 borderWidth: 2,
                                 fill: true,
+                                lineTension: 0.4,
                             }]
                         },
                         options: { 
@@ -207,7 +208,7 @@
                 let tooltipsContainer = containerData.map(data => {
                     return `Timestamp: ${data.timestamp}\nContainer ID: ${data.containerId}\nEarnings: ${data.earnings}`;
                 });
-                createChart(document.getElementById('chart2').getContext('2d'), 'bubble', xValuesContainer, containerStats, 'Containers', tooltipsContainer);
+                createChart(document.getElementById('chart2').getContext('2d'), 'bubble', xValuesContainer, containerStats, 'Containers', tooltipsContainer, 1);
 
 
                 // Bandwidth Sharing Chart
