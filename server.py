@@ -112,7 +112,7 @@ def search_logs(log_dir):
             if file.endswith(('.txt', '.log')) and "Bandwidth-SGS-" not in root
         )
     log_files.sort(key=os.path.getmtime, reverse=True)
-    log_files = log_files[:20]
+    log_files = log_files[:3]
 
     # Process logs
     new_data_found = False
@@ -129,7 +129,7 @@ def search_logs(log_dir):
         }
         if file_path not in log_cache['order']:
             log_cache['order'].append(file_path)
-            if len(log_cache['order']) > 20:
+            if len(log_cache['order']) > 3:
                 oldest_file = log_cache['order'].pop(0)
                 log_cache['files'].pop(oldest_file, None)
 
@@ -141,7 +141,7 @@ def search_logs(log_dir):
         for file in filenames if file.endswith(('.txt', '.log'))
     ]
     bandwidth_files.sort(key=os.path.getmtime, reverse=True)
-    bandwidth_files = bandwidth_files[:5]
+    bandwidth_files = bandwidth_files[:2]
 
     for file_path in bandwidth_files:
         start_line = bandwidth_cache['files'].get(file_path, {}).get('last_line', 0)
@@ -156,7 +156,7 @@ def search_logs(log_dir):
         }
         if file_path not in bandwidth_cache['order']:
             bandwidth_cache['order'].append(file_path)
-            if len(bandwidth_cache['order']) > 20:
+            if len(bandwidth_cache['order']) > 2:
                 oldest_file = bandwidth_cache['order'].pop(0)
                 bandwidth_cache['files'].pop(oldest_file, None)
 
